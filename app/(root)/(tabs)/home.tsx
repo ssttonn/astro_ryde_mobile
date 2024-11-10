@@ -1,10 +1,22 @@
-import { SafeAreaView, Text } from "react-native";
+import { SafeAreaView, Text, View } from "react-native";
+import React from "react";
+import {SignedIn, SignedOut, useUser} from "@clerk/clerk-expo";
 
 const HomeScreen = () => {
+  const {user} = useUser();
   return (
-    <SafeAreaView className="flex-1 bg-black items-center justify-center">
-      <Text className="text-primary-100">Home</Text>
-    </SafeAreaView>
+    <View>
+      <SignedIn>
+        <SafeAreaView>
+          <Text>Welcome back!</Text>
+        </SafeAreaView>
+      </SignedIn>
+      <SignedOut>
+        <SafeAreaView>
+          <Text>Sign in or register</Text>
+        </SafeAreaView>
+      </SignedOut>
+    </View>
   );
 };
 
