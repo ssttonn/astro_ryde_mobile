@@ -7,7 +7,7 @@ import {
   TouchableWithoutFeedback,
   Alert,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { icons, images } from "@/constants";
 import InputField from "@/components/InputField";
 import MainButton from "@/components/MainButton";
@@ -15,16 +15,35 @@ import { Link, router } from "expo-router";
 import OAuthMethod from "@/components/OAuthMethod";
 import { useSignUp } from "@clerk/clerk-expo";
 import { ReactNativeModal } from "react-native-modal";
+import { useValidators } from "@/hooks/useValidators";
+import { create } from "zustand";
 
-const RegisterScreen = () => {
-  const { isLoaded, signUp, setActive } = useSignUp();
-  const [isShowingSuccessModal, setIsShowingSuccessModal] = useState(false);
+interface RegisterState {
+  email: string;
+  password: string;
+  name: string;
+  setFormField: (field: string, value: string) => void;
+}
 
-  const [form, setForm] = useState({
-    name: "",
+const useRegisterState = create<RegisterState>((set) => {
+  return {
     email: "",
     password: "",
-  });
+    name: "",
+    setFormField: (field, value) => {
+      set((state) => ({
+        ...state,
+        [field]: value,
+      }));
+    },
+  };
+});
+
+const useRegisterHook = () => {
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const [isShowingSuccessModal, setIsShowingSuccessModal] = useState(false);
+  const { emailValidator, passwordValidator, textValidator } = useValidators();
+  const { email, password, name, setFormField } = useRegisterState();
 
   const [verification, setVerification] = useState({
     state: "default",
@@ -32,35 +51,40 @@ const RegisterScreen = () => {
     code: "",
   });
 
-  const onRegister = async () => {
-    if (!isLoaded) {
-      return;
-    }
+  const onRegister = useCallback(
+    async (email: string, password: string) => {
+      if (!isLoaded) {
+        return;
+      }
 
-    try {
-      await signUp.create({
-        emailAddress: form.email,
-        password: form.password,
-      });
+      try {
+        await signUp.create({
+          emailAddress: email,
+          password: password,
+        });
 
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        await signUp.prepareEmailAddressVerification({
+          strategy: "email_code",
+        });
 
-      setVerification({
-        ...verification,
-        state: "pending",
-      });
-    } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
-      setVerification({
-        ...verification,
-        state: "error",
-        error: err.errors[0].longMessage,
-      });
-      return
-    }
-  };
+        setVerification({
+          ...verification,
+          state: "pending",
+        });
+      } catch (err: any) {
+        console.error(JSON.stringify(err, null, 2));
+        setVerification({
+          ...verification,
+          state: "error",
+          error: err.errors[0].longMessage,
+        });
+        return;
+      }
+    },
+    [isLoaded, signUp, verification]
+  );
 
-  const onPressVerify = async () => {
+  const onPressVerify = useCallback(async () => {
     if (!isLoaded) {
       return;
     }
@@ -86,22 +110,69 @@ const RegisterScreen = () => {
         state: "error",
         error: err.errors[0].longMessage,
       });
-      return
+      return;
     }
-  };
+  }, [isLoaded, signUp, verification]);
 
   useEffect(() => {
     if (verification.error) {
-      Alert.alert("Error", verification.error,[
-        { text: "OK", onPress: () => {
-          setVerification({
-            ...verification,
-            error: ""
-          })
-        }},
-      ] );
+      Alert.alert("Error", verification.error, [
+        {
+          text: "OK",
+          onPress: () => {
+            setVerification({
+              ...verification,
+              error: "",
+            });
+          },
+        },
+      ]);
     }
-  }, [verification.error])
+  }, [verification.error]);
+
+  const isButtonEnabled = useMemo(() => {
+    return (
+      emailValidator(email) === "" &&
+      passwordValidator(password) === "" &&
+      textValidator(name, "Name") === ""
+    );
+  }, [email, password, name, emailValidator, passwordValidator, textValidator]);
+
+  return {
+    email,
+    password,
+    name,
+    setFormField,
+    onRegister,
+    verification,
+    setVerification,
+    onPressVerify,
+    isButtonEnabled,
+    isShowingSuccessModal,
+    setIsShowingSuccessModal,
+    emailValidator,
+    passwordValidator,
+    textValidator
+  };        
+}
+
+const RegisterScreen = () => {
+  const {
+    email,
+    password,
+    name,
+    setFormField,
+    onRegister,
+    verification,
+    setVerification,
+    onPressVerify,
+    isButtonEnabled,
+    isShowingSuccessModal,
+    setIsShowingSuccessModal,
+    emailValidator,
+    passwordValidator,
+    textValidator
+  } = useRegisterHook();
 
   return (
     <ScrollView className="flex-1 bg-white">
@@ -121,36 +192,40 @@ const RegisterScreen = () => {
           <View className="p-5">
             <InputField
               label="Name"
-              value={form.name}
+              validator={useCallback((value: string) => textValidator(value, "Name"), [textValidator])}
+              value={name}
               icon={icons.person}
               placeholder="Enter your name"
-              onChangeText={(value) => {
-                setForm({ ...form, name: value });
-              }}
+              onChangeText={useCallback((value: string) => {
+                setFormField("name", value);
+              }, [])}
             />
             <InputField
               label="Email"
-              value={form.email}
+              value={email}
+              validator={emailValidator}
               icon={icons.email}
               placeholder="Enter your email"
-              onChangeText={(value) => {
-                setForm({ ...form, email: value });
-              }}
+              onChangeText={useCallback((value: string) => {
+                setFormField("email", value);
+              }, [])}
             />
             <InputField
               label="Password"
-              value={form.password}
+              validator={passwordValidator}
+              value={password}
               icon={icons.lock}
               placeholder="Enter your password"
               secureTextEntry
-              onChangeText={(value) => {
-                setForm({ ...form, password: value });
-              }}
+              onChangeText={useCallback((value: string) => {
+                setFormField("password", value);
+              }, [])}
             />
             <MainButton
               title="Register"
-              onPress={onRegister}
-              className={`self-center mt-4 w-full`}
+              disabled={!isButtonEnabled}
+              onPress={() => onRegister(email, password)}
+              className={`self-center mt-4 w-full ${isButtonEnabled ? "bg-primary-500" : "bg-primary-200"}`}
             />
             <OAuthMethod />
             <View className="self-center mt-3 flex-row">
@@ -162,17 +237,20 @@ const RegisterScreen = () => {
               </Link>
             </View>
           </View>
-          <ReactNativeModal isVisible={verification.state === "pending"} onModalHide={() => {
-            if (verification.state === "success") {
-              setIsShowingSuccessModal(true);
-            }
-          }}>
+          <ReactNativeModal
+            isVisible={verification.state === "pending"}
+            onModalHide={() => {
+              if (verification.state === "success") {
+                setIsShowingSuccessModal(true);
+              }
+            }}
+          >
             <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
               <Text className="text-2xl font-JakartaExtraBold mb-2">
                 Verification
               </Text>
               <Text className="font-Jakarta mb-5">
-                We've sent a verification code to {form.email}
+                We've sent a verification code to {email}
               </Text>
               <InputField
                 label="Code"
@@ -184,14 +262,17 @@ const RegisterScreen = () => {
                   setVerification({ ...verification, code: value });
                 }}
               />
-              {verification.error && <Text className="text-red-500 text-sm mt-1">{verification.error}</Text>}
+              {verification.error && (
+                <Text className="text-red-500 text-sm mt-1">
+                  {verification.error}
+                </Text>
+              )}
               <MainButton
                 title="Verify Email"
                 onPress={onPressVerify}
                 className="mt-5 bg-success-500 self-center w-full"
               />
             </View>
-
           </ReactNativeModal>
           <ReactNativeModal isVisible={isShowingSuccessModal}>
             <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
@@ -205,10 +286,16 @@ const RegisterScreen = () => {
               <Text className="text-base text-gray-400 font-Jakarta text-center mt-2">
                 You have successfully verified your account.
               </Text>
-              <MainButton className="self-center mt-7 w-full" title="Browse Home" onPress={() => {
-                setIsShowingSuccessModal(false)
-                router.replace("/home")
-              }}/>
+              <MainButton
+                className="self-center mt-7 w-full"
+                title="Browse Home"
+                onPress={() => {
+                  setIsShowingSuccessModal(false);
+                  setTimeout(() => {
+                    router.replace("/home");
+                  }, 400);
+                }}
+              />
             </View>
           </ReactNativeModal>
         </View>

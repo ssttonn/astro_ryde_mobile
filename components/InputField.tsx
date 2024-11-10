@@ -8,7 +8,7 @@ import {
   Platform,
   Keyboard,
 } from "react-native";
-import React from "react";
+import React, { memo, useState } from "react";
 
 interface InputFieldProps {
   label: string;
@@ -21,6 +21,7 @@ interface InputFieldProps {
   iconClassName?: string;
   inputClassName?: string;
   placeholder?: string;
+  validator?: (value: string) => string;
   [x: string]: any;
 }
 
@@ -35,8 +36,11 @@ const InputField = ({
   iconClassName,
   inputClassName,
   placeholder,
+  validator,
   ...props
 }: InputFieldProps) => {
+  const [hasTyped, setHasTyped] = useState(false);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -56,13 +60,18 @@ const InputField = ({
             secureTextEntry={secureTextEntry}
             placeholder={placeholder}
             value={value}
-            onChangeText={onChangeText}
+            onChangeText={(value) => {
+              if (!hasTyped) setHasTyped(true);
+              onChangeText && onChangeText(value);
+            }}
             {...props}
           />
+         
         </View>
+        {hasTyped && validator && value !== undefined && validator(value) !== ""  ? <Text className="text-red-500 mt-1">{validator(value)}</Text>: undefined}
       </View>
     </KeyboardAvoidingView>
   );
 };
 
-export default InputField;
+export default memo(InputField);

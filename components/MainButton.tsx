@@ -1,5 +1,5 @@
 import { TouchableOpacity, Text, ActivityIndicator } from "react-native";
-import React, { ReactNode } from "react";
+import React, { memo, ReactNode } from "react";
 
 interface MainButtonProps {
   className?: string;
@@ -22,6 +22,7 @@ const MainButton = ({
   onPress,
   titleClassName: textClassName,
 }: MainButtonProps) => {
+  console.log("MainButton rendered", title);
   return (
     <TouchableOpacity
       disabled={disabled || isLoading}
@@ -45,4 +46,12 @@ const MainButton = ({
   );
 };
 
-export default MainButton;
+export default memo(MainButton, (prevProps, nextProps) => {
+  return (
+    prevProps.className === nextProps.className &&
+    prevProps.title === nextProps.title &&
+    prevProps.disabled === nextProps.disabled &&
+    prevProps.isLoading === nextProps.isLoading &&
+    prevProps.titleClassName === nextProps.titleClassName
+  );
+});
