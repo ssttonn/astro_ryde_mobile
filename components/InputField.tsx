@@ -41,7 +41,6 @@ const InputField = ({
 }: InputFieldProps) => {
   const [hasTyped, setHasTyped] = useState(false);
 
-  console.log("InputField", label);
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}

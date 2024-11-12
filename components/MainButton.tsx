@@ -22,7 +22,6 @@ const MainButton = ({
   onPress,
   titleClassName: textClassName,
 }: MainButtonProps) => {
-  console.log("MainButton rendered", title);
   return (
     <TouchableOpacity
       disabled={disabled || isLoading}
