@@ -1,22 +1,18 @@
-import { SafeAreaView, Text, View } from "react-native";
+import MainButton from "@/components/MainButton";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import React from "react";
-import {SignedIn, SignedOut, useUser} from "@clerk/clerk-expo";
+import { Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const HomeScreen = () => {
-  const {user} = useUser();
+  const { user } = useUser();
   return (
-    <View>
+    <SafeAreaView>
       <SignedIn>
-        <SafeAreaView>
-          <Text>Welcome back!</Text>
-        </SafeAreaView>
+        <Text>Welcome back!</Text>
+        <MainButton title="Sign out" />
       </SignedIn>
-      <SignedOut>
-        <SafeAreaView>
-          <Text>Sign in or register</Text>
-        </SafeAreaView>
-      </SignedOut>
-    </View>
+    </SafeAreaView>
   );
 };
 

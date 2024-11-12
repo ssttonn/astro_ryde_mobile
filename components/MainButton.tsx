@@ -46,12 +46,4 @@ const MainButton = ({
   );
 };
 
-export default memo(MainButton, (prevProps, nextProps) => {
-  return (
-    prevProps.className === nextProps.className &&
-    prevProps.title === nextProps.title &&
-    prevProps.disabled === nextProps.disabled &&
-    prevProps.isLoading === nextProps.isLoading &&
-    prevProps.titleClassName === nextProps.titleClassName
-  );
-});
+export default memo(MainButton);

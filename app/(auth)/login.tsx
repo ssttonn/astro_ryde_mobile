@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   Image,
   Keyboard,
@@ -11,17 +11,132 @@ import InputField from "@/components/InputField";
 import MainButton from "@/components/MainButton";
 import OAuthMethod from "@/components/OAuthMethod";
 import { icons, images } from "@/constants";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import { useSignIn } from "@clerk/clerk-expo";
+import { create } from "zustand";  
+import { useValidators } from "@/hooks/useValidators";
+
+interface LoginState {
+  form: {
+    email: string;
+    password: string;
+  };
+  loginStatus: LoginStatus;
+  setFormField: (field: string, value: string) => void;
+  setLoginStatus: (status: LoginStatus) => void;
+}
+
+enum LoginStatus {
+  Idle,
+  Loading,
+  Success,
+  Error,
+}
+
+const useLoginState = create<LoginState>((set) => {
+  return {
+    form: {
+      email: "",
+      password: "",
+    },
+    loginStatus: LoginStatus.Idle,
+    setLoginStatus: (status: LoginStatus) => {
+      set((state) => {
+        return {
+          ...state,
+          loginStatus: status,
+        };
+      });
+    },
+    setFormField: (field, value) => {
+      set((state) => {
+        return {
+          ...state,
+          form: {
+            ...state.form,
+            [field]: value,
+          },
+        };
+      });
+    },
+  };
+});
+
+const useLoginForm = () => {
+  const { signIn, setActive, isLoaded } = useSignIn();
+
+  const router = useRouter();
+
+  const {
+    form: { email, password },
+    loginStatus,
+    setFormField,
+    setLoginStatus,
+  } = useLoginState();
+
+  const onLogin = useCallback(async () => {
+    Keyboard.dismiss();
+
+    if (!isLoaded) {
+      return;
+    }
+
+    try {
+      setLoginStatus(LoginStatus.Loading);
+      const signInAttempt = await signIn.create({
+        identifier: email,
+        password,
+      });
+
+      if (signInAttempt.status === "complete") {
+        await setActive({ session: signInAttempt.createdSessionId });
+        router.replace("/home");
+
+        setLoginStatus(LoginStatus.Success);
+      } else {
+        throw new Error("Sign in failed");
+      }
+    } catch (error) {
+      setLoginStatus(LoginStatus.Error);
+      console.error(error);
+    }
+  }, [isLoaded, signIn, email, password, setLoginStatus, setActive, router]);
+
+  return {
+    email,
+    password,
+    loginStatus,
+    setFormField,
+    onLogin,
+  };
+};
+
+const useLoginValidator = () => {
+  const { email, password } = useLoginState((state) => state.form);
+
+  const {emailValidator, passwordValidator} = useValidators();
+
+  const isButtonEnabled = useMemo(() => {
+    return emailValidator(email) === "" && passwordValidator(password) === "";
+  }, [email, password]);
+
+  return {
+    emailValidator,
+    passwordValidator,
+    isButtonEnabled,
+  };
+}
 
 const LoginScreen = () => {
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const {
+    email,
+    password,
+    loginStatus,
+    setFormField,
+    onLogin,
+  } = useLoginForm();
 
-  const onLogin = () => {
-    console.log(form);
-  };
+  const { emailValidator, passwordValidator, isButtonEnabled } = useLoginValidator();
 
   return (
     <ScrollView className="flex-1 bg-white">
@@ -41,28 +156,34 @@ const LoginScreen = () => {
           <View className="p-5">
             <InputField
               label="Email"
-              value={form.email}
+              value={email}
               icon={icons.email}
+              validator={emailValidator}
               placeholder="Enter your email"
-              onChangeText={(value) => {
-                setForm({ ...form, email: value });
-              }}
+              onChangeText={useCallback((value: string) => {
+                setFormField("email", value);
+              }, [])}
             />
             <InputField
               label="Password"
-              value={form.password}
+              value={password}
               icon={icons.lock}
+              validator={passwordValidator}
               placeholder="Enter your password"
               secureTextEntry
-              onChangeText={(value) => {
-                setForm({ ...form, password: value });
-              }}
+              onChangeText={useCallback((value: string) => {
+                setFormField("password", value);
+              }, [])}
             />
 
             <MainButton
               title="Login"
-              onPress={onLogin}
-              className="mt-4 w-full"
+              isLoading={loginStatus === LoginStatus.Loading}
+              disabled={!isButtonEnabled || loginStatus === LoginStatus.Loading}
+              onPress={useCallback(() => {
+                onLogin();
+              }, [email, password])}
+              className={`mt-4 w-full h-20 ${(isButtonEnabled && !(loginStatus === LoginStatus.Loading)) ? "bg-primary-500" : "bg-gray-200"}`}
             />
 
             <OAuthMethod />

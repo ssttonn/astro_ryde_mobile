@@ -15,164 +15,165 @@ import { Link, router } from "expo-router";
 import OAuthMethod from "@/components/OAuthMethod";
 import { useSignUp } from "@clerk/clerk-expo";
 import { ReactNativeModal } from "react-native-modal";
-import { useValidators } from "@/hooks/useValidators";
 import { create } from "zustand";
+import { useValidators } from "@/hooks/useValidators";
+
+enum RegisterStatus {
+  Idle,
+  Registering,
+  Verifying,
+  PendingForVerification,
+  Success,
+  Error,
+}
 
 interface RegisterState {
-  email: string;
-  password: string;
-  name: string;
+  form: {
+    email: string;
+    password: string;
+    username: string;
+    code: string;
+  };
+  errorMessage?: string;
+  registerStatus: RegisterStatus;
   setFormField: (field: string, value: string) => void;
+  setRegisterStatus: (status: RegisterStatus, errorMessage?: string) => void;
+}
+
+const useRegisterValidators = () => {
+  const {form: {email, password, username}} = useRegisterState();
+
+  const { textValidator, emailValidator, passwordValidator } = useValidators();
+
+  const isButtonEnabled = useMemo(() => {
+    return (
+      textValidator(username, "Username") === "" &&
+      emailValidator(email) === "" &&
+      passwordValidator(password) === ""
+    );
+  }, [textValidator, emailValidator, passwordValidator, username, email, password]);
+
+  return {
+    isButtonEnabled,
+    textValidator,
+    emailValidator,
+    passwordValidator,
+  };
 }
 
 const useRegisterState = create<RegisterState>((set) => {
   return {
-    email: "",
-    password: "",
-    name: "",
+    form: {
+      email: "",
+      password: "",
+      username: "",
+      code: "",
+    },
+    registerStatus: RegisterStatus.Idle,
     setFormField: (field, value) => {
       set((state) => ({
         ...state,
-        [field]: value,
+        form: {
+          ...state.form,
+          [field]: value,
+        },
+      }));
+    },
+    setRegisterStatus: (status, errorMessage) => {
+      set((state) => ({
+        ...state,
+        registerStatus: status,
+        errorMessage: errorMessage,
       }));
     },
   };
 });
 
-const useRegisterHook = () => {
+
+const useRegisterForm = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
   const [isShowingSuccessModal, setIsShowingSuccessModal] = useState(false);
-  const { emailValidator, passwordValidator, textValidator } = useValidators();
-  const { email, password, name, setFormField } = useRegisterState();
+  const {
+    form: { email, password, username, code },
+    registerStatus,
+    errorMessage,
+    setFormField,
+    setRegisterStatus,
+  } = useRegisterState();
 
-  const [verification, setVerification] = useState({
-    state: "default",
-    error: "",
-    code: "",
-  });
 
-  const onRegister = useCallback(
-    async (email: string, password: string) => {
-      if (!isLoaded) {
-        return;
-      }
-
-      try {
-        await signUp.create({
-          emailAddress: email,
-          password: password,
-        });
-
-        await signUp.prepareEmailAddressVerification({
-          strategy: "email_code",
-        });
-
-        setVerification({
-          ...verification,
-          state: "pending",
-        });
-      } catch (err: any) {
-        console.error(JSON.stringify(err, null, 2));
-        setVerification({
-          ...verification,
-          state: "error",
-          error: err.errors[0].longMessage,
-        });
-        return;
-      }
-    },
-    [isLoaded, signUp, verification]
-  );
-
-  const onPressVerify = useCallback(async () => {
+  const onRegister = useCallback(async (email: string, password: string) => {
+    Keyboard.dismiss()
     if (!isLoaded) {
       return;
     }
 
     try {
+      console.log("Registering...", email, password);
+      setRegisterStatus(RegisterStatus.Registering);
+      await signUp.create({
+        emailAddress: email,
+        password: password,
+      });
+
+      await signUp.prepareEmailAddressVerification({
+        strategy: "email_code",
+      });
+
+      setRegisterStatus(RegisterStatus.PendingForVerification);
+    } catch (err:any) {
+      setRegisterStatus(RegisterStatus.Error, err.errors[0].longMessage);
+    }
+  }, [isLoaded, signUp, setRegisterStatus]);
+
+  const onPressVerify = useCallback(async (code: string) => {
+    if (!isLoaded) {
+      return;
+    }
+
+    try {
+      setRegisterStatus(RegisterStatus.Verifying)
       const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code: verification.code,
+        code
       });
 
       if (completeSignUp.status === "complete") {
         // TODO: Save user to DB
         await setActive({ session: completeSignUp.createdSessionId });
-        setVerification({
-          ...verification,
-          state: "success",
-        });
+        setRegisterStatus(RegisterStatus.Success);
+        setIsShowingSuccessModal(true);
       } else {
         throw new Error("Verification failed");
       }
     } catch (err: any) {
-      setVerification({
-        ...verification,
-        state: "error",
-        error: err.errors[0].longMessage,
-      });
-      return;
+      setRegisterStatus(RegisterStatus.Error, err.message);
     }
-  }, [isLoaded, signUp, verification]);
+  }, [isLoaded, signUp, setActive, setRegisterStatus]);
 
   useEffect(() => {
-    if (verification.error) {
-      Alert.alert("Error", verification.error, [
+    if (errorMessage) {
+      Alert.alert("Error", errorMessage, [
         {
           text: "OK",
           onPress: () => {
-            setVerification({
-              ...verification,
-              error: "",
-            });
+            setRegisterStatus(RegisterStatus.Idle);
           },
         },
       ]);
     }
-  }, [verification.error]);
+  }, [errorMessage, setRegisterStatus]);
 
-  const isButtonEnabled = useMemo(() => {
-    return (
-      emailValidator(email) === "" &&
-      passwordValidator(password) === "" &&
-      textValidator(name, "Name") === ""
-    );
-  }, [email, password, name, emailValidator, passwordValidator, textValidator]);
 
   return {
-    email,
-    password,
-    name,
-    setFormField,
-    onRegister,
-    verification,
-    setVerification,
-    onPressVerify,
-    isButtonEnabled,
-    isShowingSuccessModal,
-    setIsShowingSuccessModal,
-    emailValidator,
-    passwordValidator,
-    textValidator
-  };        
-}
+      email, password, username, code, registerStatus, setFormField, onRegister, onPressVerify, errorMessage, setRegisterStatus, isShowingSuccessModal
+    
+  };
+};
 
 const RegisterScreen = () => {
-  const {
-    email,
-    password,
-    name,
-    setFormField,
-    onRegister,
-    verification,
-    setVerification,
-    onPressVerify,
-    isButtonEnabled,
-    isShowingSuccessModal,
-    setIsShowingSuccessModal,
-    emailValidator,
-    passwordValidator,
-    textValidator
-  } = useRegisterHook();
+  const { email, password, username, code, registerStatus, setFormField, onRegister, onPressVerify, errorMessage, setRegisterStatus, isShowingSuccessModal } = useRegisterForm();
+  const { isButtonEnabled, textValidator, emailValidator, passwordValidator } = useRegisterValidators();
+  
 
   return (
     <ScrollView className="flex-1 bg-white">
@@ -191,13 +192,16 @@ const RegisterScreen = () => {
 
           <View className="p-5">
             <InputField
-              label="Name"
-              validator={useCallback((value: string) => textValidator(value, "Name"), [textValidator])}
-              value={name}
+              label="Username"
+              validator={useCallback(
+                (value: string) => textValidator(value, "Username"),
+                [textValidator]
+              )}
+              value={username}
               icon={icons.person}
-              placeholder="Enter your name"
+              placeholder="Enter your username"
               onChangeText={useCallback((value: string) => {
-                setFormField("name", value);
+                setFormField("username", value);
               }, [])}
             />
             <InputField
@@ -224,7 +228,10 @@ const RegisterScreen = () => {
             <MainButton
               title="Register"
               disabled={!isButtonEnabled}
-              onPress={() => onRegister(email, password)}
+              isLoading={registerStatus === RegisterStatus.Registering}
+              onPress={() => {
+                onRegister(email, password);
+              }}
               className={`self-center mt-4 w-full ${isButtonEnabled ? "bg-primary-500" : "bg-primary-200"}`}
             />
             <OAuthMethod />
@@ -237,67 +244,6 @@ const RegisterScreen = () => {
               </Link>
             </View>
           </View>
-          <ReactNativeModal
-            isVisible={verification.state === "pending"}
-            onModalHide={() => {
-              if (verification.state === "success") {
-                setIsShowingSuccessModal(true);
-              }
-            }}
-          >
-            <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
-              <Text className="text-2xl font-JakartaExtraBold mb-2">
-                Verification
-              </Text>
-              <Text className="font-Jakarta mb-5">
-                We've sent a verification code to {email}
-              </Text>
-              <InputField
-                label="Code"
-                icon={icons.lock}
-                placeholder="12345"
-                value={verification.code}
-                keybooardType="numeric"
-                onChangeText={(value) => {
-                  setVerification({ ...verification, code: value });
-                }}
-              />
-              {verification.error && (
-                <Text className="text-red-500 text-sm mt-1">
-                  {verification.error}
-                </Text>
-              )}
-              <MainButton
-                title="Verify Email"
-                onPress={onPressVerify}
-                className="mt-5 bg-success-500 self-center w-full"
-              />
-            </View>
-          </ReactNativeModal>
-          <ReactNativeModal isVisible={isShowingSuccessModal}>
-            <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
-              <Image
-                source={images.check}
-                className="w-[110px] h-[110px] mx-auto my-5"
-              />
-              <Text className="text-3xl font-JakartaBold text-center">
-                Verified
-              </Text>
-              <Text className="text-base text-gray-400 font-Jakarta text-center mt-2">
-                You have successfully verified your account.
-              </Text>
-              <MainButton
-                className="self-center mt-7 w-full"
-                title="Browse Home"
-                onPress={() => {
-                  setIsShowingSuccessModal(false);
-                  setTimeout(() => {
-                    router.replace("/home");
-                  }, 400);
-                }}
-              />
-            </View>
-          </ReactNativeModal>
         </View>
       </TouchableWithoutFeedback>
     </ScrollView>
