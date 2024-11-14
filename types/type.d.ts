@@ -137,3 +137,5 @@ declare interface DriverCardProps {
   selected: number;
   setSelected: () => void;
 }
+
+declare type VoidCallback = () => void
