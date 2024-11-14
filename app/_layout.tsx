@@ -1,19 +1,20 @@
+import { ClerkProvider, ClerkLoaded } from "@clerk/clerk-expo";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import React, { useEffect } from "react";
 import "../global.css";
-import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo'
+
 import { TokenCache, tokenCache } from "@/lib/auth";
+import "react-native-get-random-values";
 
 SplashScreen.preventAutoHideAsync();
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!
-
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
 if (!publishableKey) {
   throw new Error(
-    'Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env',
-  )
+    "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env",
+  );
 }
 
 export default function RootLayout() {
@@ -38,7 +39,10 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider tokenCache={tokenCache as TokenCache} publishableKey={publishableKey}>
+    <ClerkProvider
+      tokenCache={tokenCache as TokenCache}
+      publishableKey={publishableKey}
+    >
       <ClerkLoaded>
         <Stack screenOptions={{ headerShown: false }} />
       </ClerkLoaded>

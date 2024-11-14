@@ -1,7 +1,9 @@
-import { View, Text, Image } from "react-native";
 import React from "react";
-import MainButton from "./MainButton";
+import { View, Text, Image } from "react-native";
+
 import { icons } from "@/constants";
+
+import MainButton from "./MainButton";
 
 const OAuthMethod = () => {
   const onLoginWithGoogle = () => {};

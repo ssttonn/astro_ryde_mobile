@@ -1,5 +1,6 @@
-import { DriverStore, MarkerData } from "@/types/type";
 import { create } from "zustand";
+
+import { DriverStore, MarkerData } from "@/types/type";
 
 export const useDriverStore = create<DriverStore>((set) => {
   return {

@@ -1,10 +1,5 @@
-import GoogleTextInput from "@/components/GoogleTextInput";
-import MainButton from "@/components/MainButton";
-import Map from "@/components/Map";
-import RideCardItem from "@/components/RideCardItem";
-import { icons, images } from "@/constants";
-import { useLocationStore } from "@/store/useLocationStore";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
+import * as Location from "expo-location";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,7 +11,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Location from "expo-location";
+
+import GoogleTextInput from "@/components/GoogleTextInput";
+import Map from "@/components/Map";
+import RideCardItem from "@/components/RideCardItem";
+import { icons, images } from "@/constants";
+import { useLocationStore } from "@/store/useLocationStore";
 
 const recentRides = [
   {
@@ -141,8 +141,8 @@ const HomeScreen = () => {
       let permission = await Location.requestForegroundPermissionsAsync();
 
       if (!permission.canAskAgain) {
-        Linking.openSettings()
-        return
+        Linking.openSettings();
+        return;
       }
 
       if (permission.status === "denied") {
@@ -165,7 +165,7 @@ const HomeScreen = () => {
     };
 
     requestLocation();
-  }, [])
+  }, []);
 
   return (
     <SafeAreaView className="bg-general-500">

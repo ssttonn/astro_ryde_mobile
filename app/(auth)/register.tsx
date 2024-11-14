@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Alert, Image, ScrollView, Text, View } from "react-native";
 import { ReactNativeModal } from "react-native-modal";
 
-import MainButton from "@/components/MainButton";
 import InputField from "@/components/InputField";
+import MainButton from "@/components/MainButton";
 import OAuthMethod from "@/components/OAuthMethod";
 import { icons, images } from "@/constants";
 import { fetchAPI } from "@/lib/fetch";
@@ -186,7 +186,7 @@ const RegisterScreen = () => {
               onPress={() => {
                 setTimeout(() => {
                   router.push("/home");
-                }, 300)
+                }, 300);
               }}
               className="mt-5 self-center w-full"
             />

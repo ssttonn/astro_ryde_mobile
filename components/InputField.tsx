@@ -1,14 +1,12 @@
+import React, { memo, useState } from "react";
 import {
   View,
   Text,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback,
   Image,
   TextInput,
   Platform,
-  Keyboard,
 } from "react-native";
-import React, { memo, useState } from "react";
 
 interface InputFieldProps {
   label: string;
@@ -66,9 +64,13 @@ const InputField = ({
             }}
             {...props}
           />
-         
         </View>
-        {hasTyped && validator && value !== undefined && validator(value) !== ""  ? <Text className="text-red-500 mt-1">{validator(value)}</Text>: undefined}
+        {hasTyped &&
+        validator &&
+        value !== undefined &&
+        validator(value) !== "" ? (
+          <Text className="text-red-500 mt-1">{validator(value)}</Text>
+        ) : undefined}
       </View>
     </KeyboardAvoidingView>
   );

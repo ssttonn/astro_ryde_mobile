@@ -1,3 +1,5 @@
+import { useSignIn } from "@clerk/clerk-expo";
+import { Link, useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
 import {
   Image,
@@ -7,13 +9,12 @@ import {
   View,
   Text,
 } from "react-native";
+import { create } from "zustand";
+
 import InputField from "@/components/InputField";
 import MainButton from "@/components/MainButton";
 import OAuthMethod from "@/components/OAuthMethod";
 import { icons, images } from "@/constants";
-import { Link, useRouter } from "expo-router";
-import { useSignIn } from "@clerk/clerk-expo";
-import { create } from "zustand";  
 import { useValidators } from "@/hooks/useValidators";
 
 interface LoginState {
@@ -114,29 +115,25 @@ const useLoginForm = () => {
 const useLoginValidator = () => {
   const { email, password } = useLoginState((state) => state.form);
 
-  const {emailValidator, passwordValidator} = useValidators();
+  const { emailValidator, passwordValidator } = useValidators();
 
   const isButtonEnabled = useMemo(() => {
     return emailValidator(email) === "" && passwordValidator(password) === "";
-  }, [email, password]);
+  }, [email, password, emailValidator, passwordValidator]);
 
   return {
     emailValidator,
     passwordValidator,
     isButtonEnabled,
   };
-}
+};
 
 const LoginScreen = () => {
-  const {
-    email,
-    password,
-    loginStatus,
-    setFormField,
-    onLogin,
-  } = useLoginForm();
+  const { email, password, loginStatus, setFormField, onLogin } =
+    useLoginForm();
 
-  const { emailValidator, passwordValidator, isButtonEnabled } = useLoginValidator();
+  const { emailValidator, passwordValidator, isButtonEnabled } =
+    useLoginValidator();
 
   return (
     <ScrollView className="flex-1 bg-white">
@@ -183,7 +180,7 @@ const LoginScreen = () => {
               onPress={useCallback(() => {
                 onLogin();
               }, [email, password])}
-              className={`mt-4 w-full h-20 ${(isButtonEnabled && !(loginStatus === LoginStatus.Loading)) ? "bg-primary-500" : "bg-gray-200"}`}
+              className={`mt-4 w-full h-20 ${isButtonEnabled && !(loginStatus === LoginStatus.Loading) ? "bg-primary-500" : "bg-gray-200"}`}
             />
 
             <OAuthMethod />

@@ -1,5 +1,6 @@
-import { LocationStore } from "@/types/type";
 import { create } from "zustand";
+
+import { LocationStore } from "@/types/type";
 
 export const useLocationStore = create<LocationStore>((set) => {
   return {

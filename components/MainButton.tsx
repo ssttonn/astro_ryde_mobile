@@ -1,5 +1,5 @@
-import { TouchableOpacity, Text, ActivityIndicator } from "react-native";
 import React, { memo, ReactNode } from "react";
+import { TouchableOpacity, Text, ActivityIndicator } from "react-native";
 
 interface MainButtonProps {
   className?: string;
@@ -26,9 +26,7 @@ const MainButton = ({
     <TouchableOpacity
       disabled={disabled || isLoading}
       onPress={onPress}
-      className={
-        `${MainButtonDefaultClassName} ${className || ""}`
-      }
+      className={`${MainButtonDefaultClassName} ${className || ""}`}
     >
       {isLoading ? (
         <ActivityIndicator color="#161622" />

@@ -4,11 +4,11 @@ import { Animated } from "react-native";
 const useVideoPlayer = () => {
   const video = useRef<any>(null);
   const [status, setStatus] = useState<any>(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0));
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
+    Animated.timing(fadeAnim.current, {
       toValue: isPlaying ? 0 : 1,
       duration: 500,
       useNativeDriver: true,
@@ -23,9 +23,16 @@ const useVideoPlayer = () => {
     if (status?.isPlaying !== isPlaying) {
       setIsPlaying(status?.isPlaying);
     }
-  }, [status]);
+  }, [status, isPlaying]);
 
-  return { video, status, fadeAnim, isPlaying, setIsPlaying, setVideoStatus: setStatus };
+  return {
+    video,
+    status,
+    fadeAnim,
+    isPlaying,
+    setIsPlaying,
+    setVideoStatus: setStatus,
+  };
 };
 
 export default useVideoPlayer;
