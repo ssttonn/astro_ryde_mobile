@@ -81,8 +81,6 @@ const Map = () => {
     if (Array.isArray(drivers)) {
       if (!userLatitude || !userLongitude) return;
 
-      console.log("Render", userLatitude, userLongitude);
-
       const newMarkers = generateMarkersFromData({
         data: drivers,
         userLatitude,
@@ -110,7 +108,6 @@ const Map = () => {
       showsPointsOfInterest={false}
     >
       {markers.map((marker) => {
-        console.log(marker);
         return (
           <Marker
             key={marker.id}

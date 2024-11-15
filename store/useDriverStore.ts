@@ -19,6 +19,7 @@ export const useDriverStore = create<DriverStore>((set) => {
         return {
           ...state,
           drivers: drivers,
+          selectedDriver: state.selectedDriver || drivers[0]?.id,
         };
       });
     },

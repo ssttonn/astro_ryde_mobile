@@ -4,7 +4,7 @@ import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplet
 
 import { icons } from "@/constants";
 
-type DestinationCallback = (
+export type DestinationCallback = (
   latitude: number,
   longitude: number,
   address: string,

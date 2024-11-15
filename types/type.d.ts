@@ -98,12 +98,12 @@ declare interface PaymentProps {
 }
 
 declare interface LocationStore {
-  userLatitude: number | null;
-  userLongitude: number | null;
-  userAddress: string | null;
-  destinationLatitude: number | null;
-  destinationLongitude: number | null;
-  destinationAddress: string | null;
+  userLatitude: number | undefined;
+  userLongitude: number | undefined;
+  userAddress: string | undefined;
+  destinationLatitude: number | undefined;
+  destinationLongitude: number | undefined;
+  destinationAddress: string | undefined;
   setUserLocation: ({
     latitude,
     longitude,
@@ -132,8 +132,8 @@ declare interface DriverStore {
   clearSelectedDriver: () => void;
 }
 
-declare interface DriverCardProps {
-  item: MarkerData;
+declare interface DriverCardItemProps {
+  driver: MarkerData;
   selected: number;
   setSelected: () => void;
 }

@@ -1,5 +1,6 @@
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import * as Location from "expo-location";
+import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -12,7 +13,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import GoogleTextInput from "@/components/GoogleTextInput";
+import GoogleTextInput, {
+  DestinationCallback,
+} from "@/components/GoogleTextInput";
 import Map from "@/components/Map";
 import RideCardItem from "@/components/RideCardItem";
 import { icons, images } from "@/constants";
@@ -134,7 +137,17 @@ const HomeScreen = () => {
 
   const signOut = useCallback(() => {}, []);
 
-  const onDestinationPressed = useCallback(() => {}, []);
+  const onDestinationPressed = useCallback<DestinationCallback>(
+    (latitude, longitude, address) => {
+      setDestinationLocation({
+        latitude,
+        longitude,
+        address,
+      });
+      router.push("/(root)/find-ride");
+    },
+    [setDestinationLocation],
+  );
 
   useEffect(() => {
     const requestLocation = async () => {
@@ -162,10 +175,16 @@ const HomeScreen = () => {
         longitude: location.coords?.longitude,
         address: `${address[0].name}, ${address[0].region}`,
       });
+
+      onDestinationPressed(
+        location.coords?.latitude,
+        location.coords?.longitude,
+        `${address[0].name}, ${address[0].region}`,
+      );
     };
 
     requestLocation();
-  }, []);
+  }, [setUserLocation]);
 
   return (
     <SafeAreaView className="bg-general-500">

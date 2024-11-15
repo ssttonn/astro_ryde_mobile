@@ -4,8 +4,6 @@ import { Redirect } from "expo-router";
 export default function App() {
   const { isSignedIn } = useAuth();
 
-  console.log(isSignedIn);
-
   if (isSignedIn) {
     return <Redirect href="/home" />;
   }

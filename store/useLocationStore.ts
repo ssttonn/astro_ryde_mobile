@@ -4,12 +4,12 @@ import { LocationStore } from "@/types/type";
 
 export const useLocationStore = create<LocationStore>((set) => {
   return {
-    userAddress: null,
-    userLatitude: null,
-    userLongitude: null,
-    destinationAddress: null,
-    destinationLatitude: null,
-    destinationLongitude: null,
+    userAddress: undefined,
+    userLatitude: undefined,
+    userLongitude: undefined,
+    destinationAddress: undefined,
+    destinationLatitude: undefined,
+    destinationLongitude: undefined,
     setUserLocation: ({
       latitude,
       longitude,

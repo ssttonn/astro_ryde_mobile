@@ -1,7 +1,7 @@
 import { ClerkProvider, ClerkLoaded } from "@clerk/clerk-expo";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
-import React, { useEffect } from "react";
+import React, { StrictMode, useEffect } from "react";
 import "../global.css";
 
 import { TokenCache, tokenCache } from "@/lib/auth";

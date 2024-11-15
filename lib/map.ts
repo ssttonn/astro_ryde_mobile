@@ -30,10 +30,10 @@ export const calculateRegion = ({
   destinationLatitude,
   destinationLongitude,
 }: {
-  userLatitude: number | null;
-  userLongitude: number | null;
-  destinationLatitude?: number | null;
-  destinationLongitude?: number | null;
+  userLatitude: number | undefined;
+  userLongitude: number | undefined;
+  destinationLatitude?: number | undefined;
+  destinationLongitude?: number | undefined;
 }) => {
   if (!userLatitude || !userLongitude) {
     return {
