@@ -62,7 +62,8 @@ const BookRide = () => {
             <View className="flex flex-row items-center justify-between border-b border-white py-3">
               <Text className="text-lg font-Jakarta">Pickup Time</Text>
               <Text className="text-lg font-Jakarta">
-                {driverDetails?.time && formatTime(driverDetails?.time)}
+                {driverDetails?.time &&
+                  formatTime(parseInt(`${driverDetails?.time}`))}
               </Text>
             </View>
             <View className="flex flex-row items-center justify-between py-3">

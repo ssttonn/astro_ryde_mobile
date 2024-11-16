@@ -40,7 +40,7 @@ const RideCardItem = ({ ride }: RideCardItemProps) => {
             Date & Time
           </Text>
           <Text className="text-md font-JakartaMedium text-gray-500">
-            {`${formatDate(ride.created_at)}, ${formatTime(ride.ride_time)}`}
+            {`${formatDate(ride.created_at)}, ${formatTime(parseInt(`${ride.ride_time}`))}`}
           </Text>
         </View>
         <View className="flex flex-row items-center w-full justify-between">

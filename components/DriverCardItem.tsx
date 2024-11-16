@@ -35,7 +35,7 @@ const DriverCardItem = ({
           </View>
           <Text className="text-sm font-Jakarta text-general-800 ml-1">|</Text>
           <Text className="text-sm font-Jakarta text-general-800">
-            {driver.time && formatTime(driver.time!)}
+            {driver.time && formatTime(parseInt(`${driver.time!}`))}
           </Text>
           <Text className="text-sm font-Jakarta text-general-800 mx-1">|</Text>
           <Text className="text-sm font-Jakarta text-general-800">

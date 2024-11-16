@@ -80,10 +80,10 @@ export const calculateDriverTimes = async ({
   destinationLongitude,
 }: {
   markers: MarkerData[];
-  userLatitude: number | null;
-  userLongitude: number | null;
-  destinationLatitude: number | null;
-  destinationLongitude: number | null;
+  userLatitude: number | undefined;
+  userLongitude: number | undefined;
+  destinationLatitude: number | undefined;
+  destinationLongitude: number | undefined;
 }) => {
   if (
     !userLatitude ||
@@ -117,5 +117,6 @@ export const calculateDriverTimes = async ({
     return await Promise.all(timesPromises);
   } catch (error) {
     console.error("Error calculating driver times:", error);
+    throw error;
   }
 };
