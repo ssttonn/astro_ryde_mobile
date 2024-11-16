@@ -79,6 +79,9 @@ const GoogleTextInput = ({
           key: process.env.EXPO_PUBLIC_GOOGLE_API_KEY,
           language: "en",
         }}
+        onFail={(error) => {
+          console.error(error);
+        }}
         renderLeftButton={() => {
           return (
             <View className="justify-center items-center w-6 h-6">

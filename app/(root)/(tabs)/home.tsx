@@ -154,7 +154,7 @@ const HomeScreen = () => {
       let permission = await Location.requestForegroundPermissionsAsync();
 
       if (!permission.canAskAgain) {
-        Linking.openSettings();
+        await Linking.openSettings();
         return;
       }
 

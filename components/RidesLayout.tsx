@@ -18,7 +18,7 @@ import Map from "./Map";
 type RidesLayoutProps = {
   children: React.ReactNode;
   title?: string;
-  snapPoints: string[];
+  snapPoints?: string[];
 };
 
 const RidesLayout = ({ children, title, snapPoints }: RidesLayoutProps) => {
